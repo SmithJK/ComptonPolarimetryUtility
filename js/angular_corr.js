@@ -274,8 +274,8 @@ function recalculate(){
 		$('#delta2-slider').removeAttr('disabled');
     }
 
-    document.getElementById("a2").value = calculate_a2(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
-    document.getElementById("a4").value = calculate_a4(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
+    document.getElementById("a2").value = calculate_a6(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
+    document.getElementById("a4").value = calculate_a8(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
     document.getElementById("a6").value = calculate_a6(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
     document.getElementById("a8").value = calculate_a8(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
 
