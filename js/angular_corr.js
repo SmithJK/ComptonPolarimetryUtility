@@ -8,6 +8,8 @@ function plot(setup){
         x2 = 1,
         a2 = parseFloat(document.getElementById("a2").value),
         a4 = parseFloat(document.getElementById("a4").value),
+        a6 = parseFloat(document.getElementById("a6").value),
+        a8 = parseFloat(document.getElementById("a8").value),
         xs = 1.0 * (x2 - x1) / width,
         data = [],
         plotWidth = document.getElementById('plotCol').offsetWidth,
@@ -17,7 +19,7 @@ function plot(setup){
     //generate data to plot
     for(i = 0; i < width; i++) {
         x = x1 + i * xs;
-        y = 1 + a2 / 2 * (3 * x * x - 1) + a4 / 8 * (35 * x * x * x * x - 30 * x * x + 3);
+        y = 1 + a2 / 2 * (3 * x * x - 1) + a4 / 8 * (35 * x * x * x * x - 30 * x * x + 3) + a6 /16*(231*x*x*x*x*x*x - 315*x*x*x*x + 105*x*x -5) + a8/128*(6435*x*x*x*x*x*x*x*x-12012*x*x*x*x*x*x + 6930*x*x*x*x - 1260*x*x +35);
         row = [x];
         if(y.length > 0) {
             for(j = 0; j < y.length; j++) {
@@ -274,6 +276,8 @@ function recalculate(){
 
     document.getElementById("a2").value = calculate_a2(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
     document.getElementById("a4").value = calculate_a4(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
+    document.getElementById("a6").value = calculate_a6(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
+    document.getElementById("a6").value = calculate_a8(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
 
     plot();
 
@@ -327,6 +331,16 @@ function calculate_a2(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
 
 function calculate_a4(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
     return B(4,j2,j1,l1a,l1b,delta1)*A(4,j3,j2,l2a,l2b,delta2);
+};
+
+function calculate_a6(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
+    if (j2<3) return 0;
+    else return B(6,j2,j1,l1a,l1b,delta1)*A(6,j3,j2,l2a,l2b,delta2);
+};
+
+function calculate_a8(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
+    if (j2<4) return 0;
+    else return B(8,j2,j1,l1a,l1b,delta1)*A(8,j3,j2,l2a,l2b,delta2);
 };
 
 function ClebschGordan(j1, m1, j2, m2, j, m){
