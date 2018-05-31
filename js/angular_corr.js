@@ -334,13 +334,11 @@ function calculate_a4(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
 };
 
 function calculate_a6(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
-    if (j2<3) return 0;
-    else return B(6,j2,j1,l1a,l1b,delta1)*A(6,j3,j2,l2a,l2b,delta2);
+    return B(6,j2,j1,l1a,l1b,delta1)*A(6,j3,j2,l2a,l2b,delta2);
 };
 
 function calculate_a8(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
-    if (j2<4) return 0;
-    else return B(8,j2,j1,l1a,l1b,delta1)*A(8,j3,j2,l2a,l2b,delta2);
+    return B(8,j2,j1,l1a,l1b,delta1)*A(8,j3,j2,l2a,l2b,delta2);
 };
 
 function ClebschGordan(j1, m1, j2, m2, j, m){
