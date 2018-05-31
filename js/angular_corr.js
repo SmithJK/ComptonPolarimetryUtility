@@ -297,12 +297,18 @@ function recalculate(){
 
     dataStore.a2 = [];
     dataStore.a4 = [];
+    dataStore.a6 = [];
+    dataStore.a8 = [];
     for(i=0; i<dataStore.steps; i++){
         dataStore.a2[i] = []
         dataStore.a4[i] = []
+        dataStore.a6[i] = []
+        dataStore.a8[i] = []
         for(j=0; j<dataStore.steps; j++){
             dataStore.a2[i][j] = dataStore.A2[i]*dataStore.B2[j];
             dataStore.a4[i][j] = dataStore.A4[i]*dataStore.B4[j];
+            dataStore.a6[i][j] = dataStore.A6[i]*dataStore.B6[j];
+            dataStore.a8[i][j] = dataStore.A8[i]*dataStore.B8[j];
         }
     }
 
@@ -553,13 +559,21 @@ function tabulateA(k, f1, f2, f3){
     if(k==2)
         dataStore.A2 = [];
     else if(k==4)
-        dataStore.A4 = []
+        dataStore.A4 = [];
+    else if(k==6)
+        dataStore.A6 = [];
+    else if(k==8)
+        dataStore.A8 = [];
     for(i=0; i<dataStore.steps; i++){
         delta = min + (max-min)*i/dataStore.steps;
         if(k==2)
             dataStore.A2.push( (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3) );
         else if(k==4)
             dataStore.A4.push( (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3) );
+        else if(k==6)
+            dataStore.A6.push( (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3) );
+        else if(k==8)
+            dataStore.A8.push( (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3) );
     }
 }
 
@@ -582,13 +596,21 @@ function tabulateB(k, f1, f2, f3, L1, L2){
     if(k==2)
         dataStore.B2 = [];
     else if(k==4)
-        dataStore.B4 = [];
+        dataStore.B4 = []; 
+    else if(k==6)
+        dataStore.B6 = [];
+    else if(k==8)
+        dataStore.B8 = [];
     for(i=0; i<dataStore.steps; i++){
         delta = min + (max-min)*i/dataStore.steps;
         if(k==2)
             dataStore.B2.push( (1/(1+Math.pow(delta,2)))*(f1+(Math.pow((-1),((L1+L2))))*2*delta*f2+delta*delta*f3) );
         else if (k==4)
             dataStore.B4.push( (1/(1+Math.pow(delta,2)))*(f1+(Math.pow((-1),((L1+L2))))*2*delta*f2+delta*delta*f3) );
+        else if (k==6)
+            dataStore.B6.push( (1/(1+Math.pow(delta,2)))*(f1+(Math.pow((-1),((L1+L2))))*2*delta*f2+delta*delta*f3) );
+        else if (k==8)
+            dataStore.B8.push( (1/(1+Math.pow(delta,2)))*(f1+(Math.pow((-1),((L1+L2))))*2*delta*f2+delta*delta*f3) );
     }
 }
 
