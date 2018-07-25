@@ -1,18 +1,25 @@
-function plot(){
+//////////////////
+//plotting
+//////////////////
+function plot(setup){
     var graph = document.getElementById("graph_div"),
-        width = parseInt(graph.style.width, 10),
+        width = 1000,
         x1 = -1,
         x2 = 1,
         a2 = parseFloat(document.getElementById("a2").value),
         a4 = parseFloat(document.getElementById("a4").value),
+        a6 = parseFloat(document.getElementById("a6").value),
+        a8 = parseFloat(document.getElementById("a8").value),
         xs = 1.0 * (x2 - x1) / width,
         data = [],
+        plotWidth = document.getElementById('plotCol').offsetWidth,
+        plotHeight = plotWidth*3/4,
         i, j, x, y, row;
 
     //generate data to plot
     for(i = 0; i < width; i++) {
         x = x1 + i * xs;
-        y = 1 + a2 / 2 * (3 * x * x - 1) + a4 / 8 * (35 * x * x * x * x - 30 * x * x + 3);
+        y = 1 + a2 / 2 * (3 * x * x - 1) + a4 / 8 * (35 * x * x * x * x - 30 * x * x + 3) + a6 /16*(231*x*x*x*x*x*x - 315*x*x*x*x + 105*x*x -5) + a8/128*(6435*x*x*x*x*x*x*x*x-12012*x*x*x*x*x*x + 6930*x*x*x*x - 1260*x*x +35);
         row = [x];
         if(y.length > 0) {
             for(j = 0; j < y.length; j++) {
@@ -24,17 +31,141 @@ function plot(){
         data.push(row);
     }
 
-    new Dygraph(graph, data,
-        {
-            xlabel: "cos &#952",
-            ylabel: "W(&#952)",
-            labels: ['Cos','W'],
-            color: "red",
-            strokeWidth: 3.0,
-            valueRange: [0.0, 2.0]
-        }
-    );
+    //dygraphs fixes div size on paint, remove to allow resize
+    document.getElementById('graph_div').setAttribute('style', '');
+
+    //first time setup the dygraphs
+    if(setup){
+        dataStore.plot = new Dygraph(graph, [[0,0],[0,0]],
+            {
+                xlabel: "cos &#952",
+                ylabel: "W(&#952)",
+                labels: ['Cos','W'],
+                color: "red",
+                strokeWidth: 3.0,
+                valueRange: [0.0, 2.0],
+                width: plotWidth,
+                height: plotHeight
+            }
+        );
+    } else {
+        dataStore.plot.updateOptions( { 'file': data });
+    }
 };
+
+function plot2D(n){
+    //regenerate the plot for a2 (n=2) or a4 (n=4)
+    var data = [
+            {
+                x: dataStore.x,
+                y: dataStore.y,
+                z: (n==2) ? dataStore.a2 : dataStore.a4,
+                type: 'contour',
+                name: (n==2) ? 'a2': 'a4', 
+                hoverinfo:"x+y+z",
+                colorscale: 'Viridis',
+                zaxis: {
+                	autorange: true
+                }
+            }
+        ],
+        dim = document.getElementById('a'+n+'Wrap').offsetWidth,
+        layout = {
+            title: (n==2) ? 'a2' : 'a4',
+            xaxis:{
+                title: 'L<sub>1a</sub> / L<sub>1b</sub> mixing'
+            },
+            yaxis:{
+                title: 'L<sub>2a</sub> / L<sub>2b</sub> mixing'
+            },
+            autosize: false,
+            width: dim,
+            height: dim
+        }
+
+
+    Plotly.newPlot('a'+n+'Plot', data, layout);
+}
+
+function plot_a(n, missingL1, missingL2){
+    //regenerate the 1D plot for at (n==2) or a4 (n==4)
+    //leave the appropriate mixing ratio unconstrained depending on who's not missing (should never be both missing)
+
+    var data,
+        dim = document.getElementById('a'+n+'Wrap').offsetWidth,
+        layout = {
+            autosize: false,
+            width: dim,
+            height: dim,
+            xaxis:{
+                title: missingL1 ? 'L<sub>2a</sub> / L<sub>2b</sub> mixing' : 'L<sub>1a</sub> / L<sub>1b</sub> mixing'
+            },
+            yaxis:{
+                title: (n==2) ? 'a2' : 'a4'
+            },
+        }, i,
+        zero = 1/(2/dataStore.steps)
+
+    //slice this 2D data along 0 for the missing mixing ratio 
+    if(missingL1){
+        data = [];
+        for(i=0; i<dataStore.steps; i++){
+            data.push( (n==2) ? dataStore.a2[i][zero] : dataStore.a4[i][zero] );
+        }
+    } else if(missingL2){
+        data = (n==2) ? dataStore.a2[zero] : dataStore.a4[zero];
+    }
+
+    //keep data around for the parametric plot
+    if(n==2)
+        dataStore.a2parametric = JSON.parse(JSON.stringify(data));
+    else if (n==4)
+        dataStore.a4parametric = JSON.parse(JSON.stringify(data));
+
+    //construct the plotly data object
+    data = [
+        {
+            x: dataStore.x,
+            y: data,
+            name: (n==2) ? 'a2': 'a4',
+            mode: 'markers',
+            type: 'scatter'
+        }
+    ]
+    
+    Plotly.newPlot('a'+n+'Plot', data, layout);    
+}
+
+function plot_parametric_a(){
+    var dim = document.getElementById('a_parametric_Wrap').offsetWidth,
+        layout = {
+            autosize: false,
+            width: dim,
+            height: dim,
+            xaxis:{
+                title: 'a2'
+            },
+            yaxis:{
+                title: 'a4'
+            },
+            hovermode:'closest'
+        },
+        data = [
+            {
+                x: dataStore.a2parametric,
+                y: dataStore.a4parametric,
+                text: dataStore.mixingRatioLabels,
+                mode: 'markers',
+                type: 'scatter',
+            }
+        ]
+
+        Plotly.newPlot('aParametricPlot', data, layout); 
+}
+
+/////////////////////////////////
+//recalculation functions
+//////////////////////////////////
 
 function recalculate_L(transition){
     // transition == 1 -> first transition; 2 -> second transition.
@@ -46,7 +177,6 @@ function recalculate_L(transition){
         momenta = ['l'+transition+'a', 'l'+transition+'b'],
         momenta_options = [document.getElementById('l'+transition+'a_value'), document.getElementById('l'+transition+'b_value')];
 
-    // l1 possibilities
     lMin = Math.abs(jFinal-jOrig);
     lMax = Math.abs(jFinal+jOrig);
     if (lMin==0){
@@ -61,12 +191,18 @@ function recalculate_L(transition){
 
     for(j=0; j<momenta.length; j++){
         momenta_options[j].innerHTML = '';
+
+        label = document.createElement('label');
+        label.innerHTML = "L<sub>" + momenta[j].slice(1) + "</sub>";
+        momenta_options[j].appendChild(label);
+
         for (i = lMin; i<=lMax; i++){
             radio = document.createElement('input');
             radio.setAttribute('type', 'radio');
             radio.setAttribute('name', momenta[j]);
             radio.setAttribute('value', i);
             radio.setAttribute('id', momenta[j] + '_' + i);
+            radio.onchange = recalculate;
             if(i == chosenMomenta[j])
                 radio.setAttribute('checked', true);
             momenta_options[j].appendChild(radio);
@@ -95,6 +231,7 @@ function check_jvalues(){
 };
 
 function recalculate(){
+    
     var j1 = parseFloat(document.getElementById("j1").value),
         j2 = parseFloat(document.getElementById("j2").value),
         j3 = parseFloat(document.getElementById("j3").value),
@@ -104,35 +241,95 @@ function recalculate(){
         l2a = parseFloat($('input[name="l2a"]:checked').val()),
         l2b = parseFloat($('input[name="l2b"]:checked').val()),
 
-        d1 = $('#delta1-slider').attr('data-slider'),
-        d2 = $('#delta2-slider').attr('data-slider');
+        d1 = parseFloat($('#mix1').val()),
+        d2 = parseFloat($('#mix2').val()),
+        i, j, row,
+        noL1mix = false, 
+        noL2mix = false,
+        min = dataStore.minMix,
+        max = dataStore.maxMix;
 
     if (l1a==l1b){
+        noL1mix = true;
         if (d1!=0){
             d1 = 0;
-            $('.range-slider').foundation('delta1-slider', 'set_value', d1);
+            $('#mix1').val(d2);
+            $('#delta1-slider').val(d2);
             alert("can't have mixing; only multipolarity selected is "+l1a);
         }
-        $('#delta1-slider').addClass('disabled');
+        $('#delta1-slider').attr('disabled', 'true');
     } else {
-        $('#delta1-slider').removeClass('disabled');
+        $('#delta1-slider').removeAttr('disabled');
     }
     if (l2a==l2b){
-		  if (d2!=0){
+        noL2mix = true;
+		if (d2!=0){
 		    d2 = 0;
-		    $('#delta2-slider').foundation('slider', 'set_value', d2);
+		    $('#mix2').val(d2);
+            $('#delta2-slider').val(d2);
 		    alert("Can't have mixing; only multipolarity selected is "+l2a);
-		  }
-		  $('#delta2-slider').addClass('disabled');
+		}
+		$('#delta2-slider').attr('disabled', 'true');
     } else {
-		  $('#delta2-slider').removeClass('disabled');
+		$('#delta2-slider').removeAttr('disabled');
     }
 
     document.getElementById("a2").value = calculate_a2(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
     document.getElementById("a4").value = calculate_a4(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
+    document.getElementById("a6").value = calculate_a6(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
+    document.getElementById("a8").value = calculate_a8(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
 
     plot();
+
+    document.getElementById('customAwarning').classList.add('hidden');
+
+    //a2 and a4 plots
+    //generate data
+
+    dataStore.x = [];
+    dataStore.y = [];
+    dataStore.mixingRatioLabels = [];
+    for(i=0; i<dataStore.steps; i++){
+        dataStore.x.push(min + (max-min)*i/dataStore.steps);
+        dataStore.y.push(min + (max-min)*i/dataStore.steps);
+        dataStore.mixingRatioLabels.push('Mixing: ' + dataStore.x[i].toFixed(6));
+    }
+
+    dataStore.a2 = [];
+    dataStore.a4 = [];
+    dataStore.a6 = [];
+    dataStore.a8 = [];
+    for(i=0; i<dataStore.steps; i++){
+        dataStore.a2[i] = []
+        dataStore.a4[i] = []
+        dataStore.a6[i] = []
+        dataStore.a8[i] = []
+        for(j=0; j<dataStore.steps; j++){
+            dataStore.a2[i][j] = dataStore.A2[i]*dataStore.B2[j];
+            dataStore.a4[i][j] = dataStore.A4[i]*dataStore.B4[j];
+            dataStore.a6[i][j] = dataStore.A6[i]*dataStore.B6[j];
+            dataStore.a8[i][j] = dataStore.A8[i]*dataStore.B8[j];
+        }
+    }
+
+    if (noL1mix && noL2mix){
+        document.getElementById('a2Plot').innerHTML = '';
+        document.getElementById('a4Plot').innerHTML = '';
+    }
+    else if(noL1mix || noL2mix){
+        plot_a(2, noL1mix, noL2mix);
+        plot_a(4, noL1mix, noL2mix);
+        plot_parametric_a();
+    } else {
+        plot2D(2);
+        plot2D(4);
+        document.getElementById('aParametricPlot').innerHTML = '';
+    }
 };
+
+//////////////////
+// Physics
+//////////////////
 
 function calculate_a2(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
     return B(2,j2,j1,l1a,l1b,delta1)*A(2,j3,j2,l2a,l2b,delta2);
@@ -142,19 +339,16 @@ function calculate_a4(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
     return B(4,j2,j1,l1a,l1b,delta1)*A(4,j3,j2,l2a,l2b,delta2);
 };
 
-//------------------------------begin angular correlation functions--------------------//
-function Factorial(value){
-    var fac;
-    if(value > 1){
-        fac = value*Factorial(value-1);
-    } else {
-        fac = 1;
-    }
-    return fac;
-}
+function calculate_a6(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
+    return B(6,j2,j1,l1a,l1b,delta1)*A(6,j3,j2,l2a,l2b,delta2);
+};
+
+function calculate_a8(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
+    return B(8,j2,j1,l1a,l1b,delta1)*A(8,j3,j2,l2a,l2b,delta2);
+};
 
 function ClebschGordan(j1, m1, j2, m2, j, m){
-    var term, cg, term1, sum, k;
+    var term, cg, term1, sum, k
 
     // Conditions check
     if( 2*j1 != Math.floor(2*j1) || 
@@ -212,7 +406,12 @@ function ClebschGordan(j1, m1, j2, m2, j, m){
     sum = 0;
     
     for(k = 0 ; k <= 99 ; k++ ){
-        if( (j1+j2-j-k < 0) || (j-j1-m2+k < 0) || (j-j2+m1+k < 0) || (j1-m1-k < 0) || (j2+m2-k < 0) ){}
+        if( (j1+j2-j-k < 0) || (j1-m1-k < 0) || (j2+m2-k < 0) )
+            //no further terms will contribute to sum, exit loop
+            break
+        else if( (j-j1-m2+k < 0) || (j-j2+m1+k < 0)  )
+            //jump ahead to next term that will contribute
+            k = Math.max(-Math.min(j-j1-m2, j-j2+m1) - 1, k);
         else{
             term = Factorial(j1+j2-j-k)*Factorial(j-j1-m2+k)*Factorial(j-j2+m1+k)*Factorial(j1-m1-k)*Factorial(j2+m2-k)*Factorial(k);
             if((k%2) == 1){
@@ -231,17 +430,16 @@ function ClebschGordan(j1, m1, j2, m2, j, m){
 
 function Wigner3j(j1, j2, j3, m1, m2, m3){
     var out;
-
     // Conditions check
-    if( 2*j1 != Math.floor(2*j1) || 
-        2*j2 != Math.floor(2*j2) || 
-        2*j3 != Math.floor(2*j3) || 
-        2*m1 != Math.floor(2*m1) || 
-        2*m2 != Math.floor(2*m2) || 
-        2*m3 != Math.floor(2*m3) ){
-        // G4cout << "All arguments must be integers or half-integers." << G4endl;
-        return 0;
-    }
+    // if( 2*j1 != Math.floor(2*j1) || 
+    //     2*j2 != Math.floor(2*j2) || 
+    //     2*j3 != Math.floor(2*j3) || 
+    //     2*m1 != Math.floor(2*m1) || 
+    //     2*m2 != Math.floor(2*m2) || 
+    //     2*m3 != Math.floor(2*m3) ){
+    //     // G4cout << "All arguments must be integers or half-integers." << G4endl;
+    //     return 0;
+    // }
 
     if(m1 + m2 + m3 != 0){
         //G4cout << "m1 + m2 + m3 must equal zero." << G4endl;
@@ -273,11 +471,10 @@ function Wigner3j(j1, j2, j3, m1, m2, m3){
     }
 
     out = (Math.pow((-1),(j1-j2-m3)))/(Math.pow((2*j3+1),(1.0/2.0)))*ClebschGordan(j1,m1,j2,m2,j3,-1*m3);
-        return out;
+    return out;
 };
 
 function Wigner6j(J1, J2, J3, J4, J5, J6){
-    
     var j1 = J1;
         j2 = J2,
         j12 = J3,
@@ -344,12 +541,78 @@ function F(k, jf, L1, L2, ji){
 };
 
 function A(k, ji, jf, L1, L2, delta){
-    return (1/(1+Math.pow(delta,2)))*(F(k,ji,L1,L1,jf)+2*delta*F(k,ji,L1,L2,jf)+delta*delta*F(k,ji,L2,L2,jf));
+    var f1 = F(k,ji,L1,L1,jf),
+        f2 = F(k,ji,L1,L2,jf),
+        f3 = F(k,ji,L2,L2,jf);
+
+    tabulateA(k, f1,f2,f3);
+
+    return (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3);
 };
 
+function tabulateA(k, f1, f2, f3){
+    //given precomputed values of F, reconstruct the table of A values for the currently selected momenta, across a range of mixing ratios.
+    var i, delta,
+        min = dataStore.minMix,
+        max = dataStore.maxMix;
+
+    if(k==2)
+        dataStore.A2 = [];
+    else if(k==4)
+        dataStore.A4 = [];
+    else if(k==6)
+        dataStore.A6 = [];
+    else if(k==8)
+        dataStore.A8 = [];
+    for(i=0; i<dataStore.steps; i++){
+        delta = min + (max-min)*i/dataStore.steps;
+        if(k==2)
+            dataStore.A2.push( (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3) );
+        else if(k==4)
+            dataStore.A4.push( (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3) );
+        else if(k==6)
+            dataStore.A6.push( (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3) );
+        else if(k==8)
+            dataStore.A8.push( (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3) );
+    }
+}
+
 function B(k, ji, jf, L1, L2, delta){
-      return (1/(1+Math.pow(delta,2)))*(  F(k,jf,L1,L1,ji)+(Math.pow((-1),((L1+L2))))*2*delta*F(k,jf,L1,L2,ji)+delta*delta*F(k,jf,L2,L2,ji) );
+    var f1 = F(k,jf,L1,L1,ji),
+        f2 = F(k,jf,L1,L2,ji),
+        f3 = F(k,jf,L2,L2,ji)
+
+    tabulateB(k, f1,f2,f3,L1,L2);
+
+    return (1/(1+Math.pow(delta,2)))*(f1+(Math.pow((-1),((L1+L2))))*2*delta*f2+delta*delta*f3);
 };
+
+function tabulateB(k, f1, f2, f3, L1, L2){
+    //given precomputed values of F, reconstruct the table of B values for the currently selected momenta, across a range of mixing ratios.
+    var i, delta,
+        min = dataStore.minMix,
+        max = dataStore.maxMix;
+
+    if(k==2)
+        dataStore.B2 = [];
+    else if(k==4)
+        dataStore.B4 = []; 
+    else if(k==6)
+        dataStore.B6 = [];
+    else if(k==8)
+        dataStore.B8 = [];
+    for(i=0; i<dataStore.steps; i++){
+        delta = min + (max-min)*i/dataStore.steps;
+        if(k==2)
+            dataStore.B2.push( (1/(1+Math.pow(delta,2)))*(f1+(Math.pow((-1),((L1+L2))))*2*delta*f2+delta*delta*f3) );
+        else if (k==4)
+            dataStore.B4.push( (1/(1+Math.pow(delta,2)))*(f1+(Math.pow((-1),((L1+L2))))*2*delta*f2+delta*delta*f3) );
+        else if (k==6)
+            dataStore.B6.push( (1/(1+Math.pow(delta,2)))*(f1+(Math.pow((-1),((L1+L2))))*2*delta*f2+delta*delta*f3) );
+        else if (k==8)
+            dataStore.B8.push( (1/(1+Math.pow(delta,2)))*(f1+(Math.pow((-1),((L1+L2))))*2*delta*f2+delta*delta*f3) );
+    }
+}
 
 function evenA(){
     
@@ -392,3 +655,47 @@ function oddA(){
     document.getElementById("j2").value = 1.5;
     document.getElementById("j3").value = 0.5;
 };
+
+/////////////////
+// helpers
+/////////////////
+
+function Factorial(value){
+
+    var fac;
+
+    if(dataStore.cache.factorial[value]){
+        return dataStore.cache.factorial[value];
+    } else {
+        if(value > 1){
+            fac = value*Factorial(value-1);
+        } else {
+            fac = 1;
+        }
+        dataStore.cache.factorial[value] = fac;
+
+        return fac;
+    }
+}
+
+function syncElements(source, dest){
+    //source: string; id of element to read value from
+    //dest: string; id of element to write value to
+    //onchange callback to set the value of another element to that of this one.
+
+    var val = document.getElementById(source).value;
+    document.getElementById(dest).value = val;
+}
+
+
+function updateMixingSamples(){
+    dataStore.steps = parseInt(document.getElementById('mixingSamples').value,10);
+    recalculate();
+}
+
+function updateMixLimits(){
+    dataStore.minMix = parseFloat(document.getElementById('minMix').value,10);
+    dataStore.maxMix = parseFloat(document.getElementById('maxMix').value,10);
+    recalculate();
+
+}
