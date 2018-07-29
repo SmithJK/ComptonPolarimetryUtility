@@ -7,7 +7,7 @@ function plot(setup){
         x1 = 0,
         x2 = 180,
         P = parseFloat(document.getElementById("P90").value),
-        Q = 1, // to be specified later by the user
+        Q = parseFloat(document.getElementById("Q").value),
         xs = 1.0 * (x2 - x1) / width,
         data = [],
         plotWidth = document.getElementById('plotCol').offsetWidth,
@@ -50,7 +50,7 @@ function plot(setup){
         dataStore.plot.updateOptions( { 'file': data });
     }
 };
-
+/*
 function plot2D(n){
     //regenerate the plot for a2 (n=2) or a4 (n=4)
     var data = [
@@ -160,7 +160,7 @@ function plot_parametric_a(){
 
         Plotly.newPlot('aParametricPlot', data, layout); 
 }
-
+*/
 /////////////////////////////////
 //recalculation functions
 //////////////////////////////////
@@ -234,6 +234,10 @@ function recalculate(){
         j2 = parseFloat(document.getElementById("j2").value),
         j3 = parseFloat(document.getElementById("j3").value),
 
+        p1 = parseFloat($('input[name="p1"]:checked').val()),
+        p2 = parseFloat($('input[name="p2"]:checked').val()),
+        p3 = parseFloat($('input[name="p3"]:checked').val()),
+
         l1a = parseFloat($('input[name="l1a"]:checked').val()),
         l1b = parseFloat($('input[name="l1b"]:checked').val()),
         l2a = parseFloat($('input[name="l2a"]:checked').val()),
@@ -241,18 +245,22 @@ function recalculate(){
 
         d1 = parseFloat($('#mix1').val()),
         d2 = parseFloat($('#mix2').val()),
+        
+        // which gamma ray compton scatters?
+        direction = parseFloat($('input[name="scatter"]:checked').val()),
+
         i, j, row,
         noL1mix = false, 
-        noL2mix = false,
-        min = dataStore.minMix,
-        max = dataStore.maxMix;
+        noL2mix = false;
+        //min = dataStore.minMix,
+        //max = dataStore.maxMix;
 
     if (l1a==l1b){
         noL1mix = true;
         if (d1!=0){
             d1 = 0;
-            $('#mix1').val(d2);
-            $('#delta1-slider').val(d2);
+            $('#mix1').val(d1);
+            $('#delta1-slider').val(d1);
             alert("can't have mixing; only multipolarity selected is "+l1a);
         }
         $('#delta1-slider').attr('disabled', 'true');
@@ -272,19 +280,25 @@ function recalculate(){
 		$('#delta2-slider').removeAttr('disabled');
     }
 
-    document.getElementById("a2").value = calculate_a2(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
+/*    document.getElementById("a2").value = calculate_a2(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
     document.getElementById("a4").value = calculate_a4(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
     document.getElementById("a6").value = calculate_a6(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
     document.getElementById("a8").value = calculate_a8(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
-    document.getElementById("P90").value = calculate_P90(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
+*/
+    if (direction==1.0) {
+       document.getElementById("P90").value = calculate_P90(j1,p1,j2,p2,j3,p3,l1a,l1b,l2a,l2b,d1,d2);
+    }
+    else if (direction==-1.0) {
+       document.getElementById("P90").value = calculate_P90(j3,p3,j2,p2,j1,p1,l2a,l2b,l1a,l1b,d2,d1);
+    }
 
     plot();
 
-    document.getElementById('customAwarning').classList.add('hidden');
+//    document.getElementById('customAwarning').classList.add('hidden');
 
     //a2 and a4 plots
     //generate data
-
+/*
     dataStore.x = [];
     dataStore.y = [];
     dataStore.mixingRatioLabels = [];
@@ -310,11 +324,11 @@ function recalculate(){
             dataStore.a8[i][j] = dataStore.A8[i]*dataStore.B8[j];
         }
     }
-
-    if (noL1mix && noL2mix){
-        document.getElementById('a2Plot').innerHTML = '';
-        document.getElementById('a4Plot').innerHTML = '';
-    }
+*/
+//    if (noL1mix && noL2mix){
+//        document.getElementById('a2Plot').innerHTML = '';
+//        document.getElementById('a4Plot').innerHTML = '';
+//    }
 //    else if(noL1mix || noL2mix){
 //        plot_a(2, noL1mix, noL2mix);
 //        plot_a(4, noL1mix, noL2mix);
@@ -330,7 +344,7 @@ function recalculate(){
 // Physics
 //////////////////
 
-function calculate_P90(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
+function calculate_P90(j1, p1, j2, p2, j3, p3, l1a, l1b, l2a, l2b, delta1, delta2){
    var topterm = 0;
    var i = 2;
    var firstterm = A(i,j1,j2,l1a,l1b,delta1)*Aprime(i,j2,j3,l2a,l2b,delta2)*assoclegendre2(i,0); // here, the second argument in assoclegendre2 is zero for theta=90
@@ -347,7 +361,11 @@ function calculate_P90(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
       i = i + 2;
       firstterm = A(i,j1,j2,l1a,l1b,delta1)*B(i,j2,j3,l2a,l2b,delta2)*legendre(i,0);
    }
-   return topterm/bottomterm;
+
+   // this is just a fancy way of making sure that an electric transition for level 2-->3 gives us the + factor and a magnetic transition gives us the - factor.
+   var factor = (-2*(l2a%2)+1)*p2*p3;
+
+   return factor*topterm/bottomterm;
 }
 
 function calculate_a2(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
@@ -600,11 +618,11 @@ function Aprime(k, ji, jf, L1, L2, delta){
         f2 = F(k,jf,L1,L2,ji),
         f3 = F(k,jf,L2,L2,ji);
 
-    tabulateAprime(k,f1,f2,f3);
+//    tabulateAprime(k,f1,f2,f3);
 
     return (1/(1+Math.pow(delta,2)))*(k1*f1-2*k2*delta*f2-k3*delta*delta*f3);
 };
-
+/*
 function tabulateAprime(k, k1, k2, k3, f1, f2, f3){
     //given precomputed values of F, reconstruct the table of A values for the currently selected momenta, across a range of mixing ratios.
     var i, delta,
@@ -631,17 +649,17 @@ function tabulateAprime(k, k1, k2, k3, f1, f2, f3){
             dataStore.Ap8.push( (1/(1+Math.pow(delta,2)))*(k1*f1-2*k2*delta*f2-k3*delta*delta*f3) );
     }
 }
-
+*/
 function A(k, ji, jf, L1, L2, delta){
     var f1 = F(k,ji,L1,L1,jf),
         f2 = F(k,ji,L1,L2,jf),
         f3 = F(k,ji,L2,L2,jf);
 
-    tabulateA(k, f1,f2,f3);
+    //tabulateA(k, f1,f2,f3);
 
     return (1/(1+Math.pow(delta,2)))*(f1-2*delta*f2+delta*delta*f3);
 };
-
+/*
 function tabulateA(k, f1, f2, f3){
     //given precomputed values of F, reconstruct the table of A values for the currently selected momenta, across a range of mixing ratios.
     var i, delta,
@@ -668,17 +686,17 @@ function tabulateA(k, f1, f2, f3){
             dataStore.A8.push( (1/(1+Math.pow(delta,2)))*(f1-2*delta*f2+delta*delta*f3) );
     }
 }
-
+*/
 function B(k, ji, jf, L1, L2, delta){
     var f1 = F(k,jf,L1,L1,ji),
         f2 = F(k,jf,L1,L2,ji),
         f3 = F(k,jf,L2,L2,ji);
 
-    tabulateB(k, f1,f2,f3,L1,L2);
+    //tabulateB(k, f1,f2,f3,L1,L2);
 
     return (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3);
 };
-
+/*
 function tabulateB(k, f1, f2, f3, L1, L2){
     //given precomputed values of F, reconstruct the table of B values for the currently selected momenta, across a range of mixing ratios.
     var i, delta,
@@ -705,7 +723,7 @@ function tabulateB(k, f1, f2, f3, L1, L2){
             dataStore.B8.push( (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3) );
     }
 }
-
+*/
 function evenA(){
     
     var select, option, i, spin;
@@ -779,7 +797,7 @@ function syncElements(source, dest){
     document.getElementById(dest).value = val;
 }
 
-
+/*
 function updateMixingSamples(){
     dataStore.steps = parseInt(document.getElementById('mixingSamples').value,10);
     recalculate();
@@ -791,3 +809,4 @@ function updateMixLimits(){
     recalculate();
 
 }
+*/

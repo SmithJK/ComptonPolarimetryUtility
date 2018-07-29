@@ -27,7 +27,7 @@
                 <form class='content' autocomplete='off'>
                     <!-- even / odd -->
                     <div>
-                        <h3>Angular Momentum Options</h3>
+                        <h3>Level Scheme Options</h3>
                         <input type="radio" id="even" name="r-group" data-toggle="button" onchange="evenA();recalculate_L(1);recalculate_L(2);recalculate();" checked>
                         <label class="button" for="even">Even mass</label>
                         <input type="radio" id="odd" name="r-group" data-toggle="button" onchange="oddA();recalculate_L(1);recalculate_L(2);recalculate();">
@@ -38,7 +38,12 @@
 
                     <!-- j1 -->
                     <label for="j1" class="right inline"><b>J<sub>1</sub>:</b></label>
-                    <select id="j1" onchange="check_jvalues(); recalculate_L(1); recalculate();"></select>             
+                    <select id="j1" onchange="check_jvalues(); recalculate_L(1); recalculate();"></select>
+                    <label for="p1" class="right inline"><b>&#960<sub>1</sub>:</b></label>
+                    <input type="radio" id="p1pos" name="p1" value='1.0' data-toggle="button" onchange="recalculate();" checked></select>
+                    <label class="button" for="p1pos">+</label>
+                    <input type="radio" id="p1neg" name="p1" value='-1.0' data-toggle="button" onchange="recalculate();"></select>
+                    <label class="button" for="p1neg">-</label>
                     <div id="l1a_value"></div>               
                     <div id="l1b_value"></div>
                     <label>L<sub>1b</sub>/L<sub>1a</sub> Mixing:</label>
@@ -50,6 +55,11 @@
                     <!-- j2 -->
                     <label for="j2" class="right inline"><b>J<sub>2</sub>:</b></label>
                     <select id="j2" onchange="check_jvalues(); recalculate_L(1); recalculate_L(2); recalculate();"></select>             
+                    <label for="p2" class="right inline"><b>&#960<sub>2</sub>:</b></label>
+                    <input type="radio" id="p2pos" name="p2" value='1.0' data-toggle="button" onchange="recalculate();" checked></select>
+                    <label class="button" for="p2pos">+</label>
+                    <input type="radio" id="p2neg" name="p2" value='-1.0' data-toggle="button" onchange="recalculate();"></select>
+                    <label class="button" for="p2neg">-</label>
                     <div id="l2a_value"></div>               
                     <div id="l2b_value"></div>
                     <label>L<sub>2b</sub>/L<sub>2a</sub> Mixing:</label>
@@ -61,10 +71,15 @@
                     <!-- j3 -->
                     <label for="j3" class="right inline"><b>J<sub>3</sub>:</b></label>
                     <select id="j3" onchange="check_jvalues();recalculate_L(2);recalculate();"></select>
+                    <label for="p3" class="right inline"><b>&#960<sub>3</sub>:</b></label>
+                    <input type="radio" id="p3pos" name="p3" value='1.0' data-toggle="button" onchange="recalculate();" checked></select>
+                    <label class="button" for="p3pos">+</label>
+                    <input type="radio" id="p3neg" name="p3" value='-1.0' data-toggle="button" onchange="recalculate();"></select>
+                    <label class="button" for="p3neg">-</label>
 
                     <hr></hr>
 
-                    <!-- a2, a4 -->
+                    <!-- a2, a4
                     <div>
                         <label for="a2" class="right inline"><b>a<sub>2</sub>:</b></label>
                         <input class='a2a4' type="number" id="a2" step="0.001" title='' onchange="plot(); document.getElementById('customAwarning').classList.remove('hidden');">
@@ -82,17 +97,29 @@
                         <input class='a2a4' type="number" id="a8" step="0.001" title='' onchange="plot(); document.getElementById('customAwarning').classList.remove('hidden');">
                     </div>
 
-                    <div id='customAwarning' class='warning hidden'>
-                        Warning: Custom values of a2 and a4 set, does not correspond to selected mixing ratios or momenta.
-                    </div>
-
                     <hr></hr>
+-->
+                    <div>
+                        <h3>Polarimetry Options</h3>
+                        <input type="radio" id="reverse" name="scatter" value='-1.0' data-toggle="button" onchange="recalculate();">
+                        <label class="button" for="reverse">&#947<sub>12</sub> Compton scatters</label><br/>
+                        <input type="radio" id="forward" name="scatter" value='1.0' data-toggle="button" onchange="recalculate();" checked>
+                        <label class="button" for="forward">&#947<sub>23</sub> Compton scatters</label>
+                    </div>
+                    <div>
+                        <label for="Q" class="right inline"><b>Q</b></label>
+                        <input class='a2a4' type="number" id="Q" step="0.001" value='1' title='' onchange="plot();">
+                    </div>
                     <div>
                         <label for="P90" class="right inline"><b>P(90)</b></label>
-                        <input class='a2a4' type="number" id="P90" step="0.001" title=''>
+                        <input class='a2a4' type="number" id="P90" step="0.001" title='' onchange="plot();document.getElementById('customQPwarning').classList.remove('hidden');">
                     </div>
                     <hr></hr>
 
+                    <div id='customQPwarning' class='warning hidden'>
+                        Warning: Custom values of P set, does not correspond to selected mixing ratios or momenta.
+                    </div>
+<!--
                     <div>
                         <h3>a2/a4 Plot Options</h3>
                         <label for='minMix' class='right inline'>Min. mixing: </label>
@@ -106,12 +133,13 @@
                         <label for='mixSamples' class='right inline'>Mixing Samples: </label>
                         <input type='number' id='mixingSamples', step='1' value='200' onchange='updateMixingSamples()'></input>
                     </div>
+-->
                 </form>
 
                 <p id="error1"></p>
             </div>
         </div>
-
+<!--
         <div class='sectionWrapper'>
             <div id='a2Wrap' class='col-md-6'>
                 <div id='a2Plot'></div>
@@ -126,7 +154,7 @@
                 <div id='aParametricPlot'></div>
             </div>
         </div>
-
+-->
         <div class='sectionWrapper content references'>
             <div class='col-md-3'>
                 <img src='images/levelScheme.png'></img>
@@ -167,18 +195,18 @@
                 cache: {
                     factorial: [],
                 },
-                steps: parseInt(document.getElementById('mixingSamples').value,10), //number of bins in mixing ratio for a2 and a4 plots
-                minMix: parseInt(document.getElementById('minMix').value,10),
-                maxMix: parseInt(document.getElementById('maxMix').value,10)
+                //steps: parseInt(document.getElementById('mixingSamples').value,10), //number of bins in mixing ratio for a2 and a4 plots
+                //minMix: parseInt(document.getElementById('minMix').value,10),
+                //maxMix: parseInt(document.getElementById('maxMix').value,10)
             };
 
             //set up x and y values for a2 and a4 plots
-            dataStore.x = [];
-            dataStore.y = [];
-            for(i=0; i<dataStore.steps; i++){
-                dataStore.x.push(-1 + 2*i/dataStore.steps);
-                dataStore.y.push(-1 + 2*i/dataStore.steps);
-            }
+            //dataStore.x = [];
+            //dataStore.y = [];
+            //for(i=0; i<dataStore.steps; i++){
+            //    dataStore.x.push(-1 + 2*i/dataStore.steps);
+            //    dataStore.y.push(-1 + 2*i/dataStore.steps);
+            //}
 
             //set up spin option dropdowns
             evenA();
