@@ -4,12 +4,10 @@
 function plot(setup){
     var graph = document.getElementById("graph_div"),
         width = 1000,
-        x1 = -1,
-        x2 = 1,
-        a2 = parseFloat(document.getElementById("a2").value),
-        a4 = parseFloat(document.getElementById("a4").value),
-        a6 = parseFloat(document.getElementById("a6").value),
-        a8 = parseFloat(document.getElementById("a8").value),
+        x1 = 0,
+        x2 = 180,
+        P = parseFloat(document.getElementById("P90").value),
+        Q = 1, // to be specified later by the user
         xs = 1.0 * (x2 - x1) / width,
         data = [],
         plotWidth = document.getElementById('plotCol').offsetWidth,
@@ -19,7 +17,7 @@ function plot(setup){
     //generate data to plot
     for(i = 0; i < width; i++) {
         x = x1 + i * xs;
-        y = 1 + a2 / 2 * (3 * x * x - 1) + a4 / 8 * (35 * x * x * x * x - 30 * x * x + 3) + a6 /16*(231*x*x*x*x*x*x - 315*x*x*x*x + 105*x*x -5) + a8/128*(6435*x*x*x*x*x*x*x*x-12012*x*x*x*x*x*x + 6930*x*x*x*x - 1260*x*x +35);
+        y = 0.5 * P * Q * Math.cos(2*3.1415926*x/180);
         row = [x];
         if(y.length > 0) {
             for(j = 0; j < y.length; j++) {
@@ -38,12 +36,12 @@ function plot(setup){
     if(setup){
         dataStore.plot = new Dygraph(graph, [[0,0],[0,0]],
             {
-                xlabel: "cos &#952",
-                ylabel: "W(&#952)",
-                labels: ['Cos','W'],
+                xlabel: "Experimental angle &#958 (deg)",
+                ylabel: "Asymmetry A(&#958)",
+                labels: ['Angle','Asymmetry'],
                 color: "red",
                 strokeWidth: 3.0,
-                valueRange: [0.0, 2.0],
+                valueRange: [-1.0, 1.0],
                 width: plotWidth,
                 height: plotHeight
             }
@@ -278,6 +276,7 @@ function recalculate(){
     document.getElementById("a4").value = calculate_a4(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
     document.getElementById("a6").value = calculate_a6(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
     document.getElementById("a8").value = calculate_a8(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
+    document.getElementById("P90").value = calculate_P90(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
 
     plot();
 
@@ -316,20 +315,40 @@ function recalculate(){
         document.getElementById('a2Plot').innerHTML = '';
         document.getElementById('a4Plot').innerHTML = '';
     }
-    else if(noL1mix || noL2mix){
-        plot_a(2, noL1mix, noL2mix);
-        plot_a(4, noL1mix, noL2mix);
-        plot_parametric_a();
-    } else {
-        plot2D(2);
-        plot2D(4);
-        document.getElementById('aParametricPlot').innerHTML = '';
-    }
+//    else if(noL1mix || noL2mix){
+//        plot_a(2, noL1mix, noL2mix);
+//        plot_a(4, noL1mix, noL2mix);
+//        plot_parametric_a();
+//    } else {
+//        plot2D(2);
+//        plot2D(4);
+//        document.getElementById('aParametricPlot').innerHTML = '';
+//    }
 };
 
 //////////////////
 // Physics
 //////////////////
+
+function calculate_P90(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
+   var topterm = 0;
+   var i = 2;
+   var firstterm = A(i,j1,j2,l1a,l1b,delta1)*Aprime(i,j2,j3,l2a,l2b,delta2)*assoclegendre2(i,0); // here, the second argument in assoclegendre2 is zero for theta=90
+   while (firstterm!=0) {
+      topterm = topterm + firstterm;
+      i = i + 2;
+      firstterm = A(i,j1,j2,l1a,l1b,delta1)*Aprime(i,j2,j3,l2a,l2b,delta2)*assoclegendre2(i,0);
+   }
+   var bottomterm = 1;
+   i=2;
+   firstterm = A(i,j1,j2,l1a,l1b,delta1)*B(i,j2,j3,l2a,l2b,delta2)*legendre(i,0);
+   while (firstterm!=0) {
+      bottomterm = bottomterm + firstterm;
+      i = i + 2;
+      firstterm = A(i,j1,j2,l1a,l1b,delta1)*B(i,j2,j3,l2a,l2b,delta2)*legendre(i,0);
+   }
+   return topterm/bottomterm;
+}
 
 function calculate_a2(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
     return B(2,j2,j1,l1a,l1b,delta1)*A(2,j3,j2,l2a,l2b,delta2);
@@ -346,6 +365,25 @@ function calculate_a6(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
 function calculate_a8(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
     return B(8,j2,j1,l1a,l1b,delta1)*A(8,j3,j2,l2a,l2b,delta2);
 };
+
+function legendre(k,x){
+   var value = 0;
+   if (k==0) value = 1;
+   else if (k==2) value = 0.5*(3*x*x-1);
+   else if (k==4) value = 1 / 8 * (35 * x * x * x * x - 30 * x * x + 3);
+   else if (k==6) value = 1/16*(231*x*x*x*x*x*x - 315*x*x*x*x + 105*x*x -5);
+   else if (k==8) value = 1/128*(6435*x*x*x*x*x*x*x*x-12012*x*x*x*x*x*x + 6930*x*x*x*x - 1260*x*x +35);
+   return value;
+}
+
+function assoclegendre2(k,x){
+   var value = 0;
+   if (k==2) value = 3*(1-x*x);
+   else if (k==4) value = 15/2*(7*x*x-1)*(1-x*x);
+   else if (k==6) value = 105/8*(1-x*x)*(33*x*x*x*x-18*x*x+1);
+   else if (k==8) value = 315/16*(1-x*x)*(143*x*x*x*x*x*x - 143*x*x*x*x + 33*x*x-1);
+   return value;
+}
 
 function ClebschGordan(j1, m1, j2, m2, j, m){
     var term, cg, term1, sum, k
@@ -540,6 +578,60 @@ function F(k, jf, L1, L2, ji){
     // T. Yamazaki. Nuclear Data A, 3(1):1?23, 1967.
 };
 
+function kappa(k, L1, L2){
+   var kappa;
+   var term1,term2;
+   if ((L1+L2)%2==0) { // even
+      term1 = k*(k+1)*(L1*(L1+1)+L2*(L2+1));
+      term2 = (L2*(L2+1)-L1*(L1+1))*(L2*(L2+1)-L1*(L1+1));
+      kappa = (Factorial(k-2)/Factorial(k+2))*(term1+term2)/(L1*(L1+1)+L2*(L2+1)-k*(k+1));
+   }
+   else { // odd
+      kappa = (Factorial(k-2)/Factorial(k+2))*(L1*(L1+1)-L2*(L2+1));
+   }
+   return kappa;
+};
+
+function Aprime(k, ji, jf, L1, L2, delta){
+    var k1 = kappa(k,L1,L1),
+        k2 = kappa(k,L1,L2),
+        k3 = kappa(k,L2,L2),
+        f1 = F(k,jf,L1,L1,ji),
+        f2 = F(k,jf,L1,L2,ji),
+        f3 = F(k,jf,L2,L2,ji);
+
+    tabulateAprime(k,f1,f2,f3);
+
+    return (1/(1+Math.pow(delta,2)))*(k1*f1-2*k2*delta*f2-k3*delta*delta*f3);
+};
+
+function tabulateAprime(k, k1, k2, k3, f1, f2, f3){
+    //given precomputed values of F, reconstruct the table of A values for the currently selected momenta, across a range of mixing ratios.
+    var i, delta,
+        min = dataStore.minMix,
+        max = dataStore.maxMix;
+
+    if(k==2)
+        dataStore.Ap2 = [];
+    else if(k==4)
+        dataStore.Ap4 = [];
+    else if(k==6)
+        dataStore.Ap6 = [];
+    else if(k==8)
+        dataStore.Ap8 = [];
+    for(i=0; i<dataStore.steps; i++){
+        delta = min + (max-min)*i/dataStore.steps;
+        if(k==2)
+            dataStore.Ap2.push( (1/(1+Math.pow(delta,2)))*(k1*f1-2*k2*delta*f2-k3*delta*delta*f3) );
+        else if(k==4)
+            dataStore.Ap4.push( (1/(1+Math.pow(delta,2)))*(k1*f1-2*k2*delta*f2-k3*delta*delta*f3) );
+        else if(k==6)
+            dataStore.Ap6.push( (1/(1+Math.pow(delta,2)))*(k1*f1-2*k2*delta*f2-k3*delta*delta*f3) );
+        else if(k==8)
+            dataStore.Ap8.push( (1/(1+Math.pow(delta,2)))*(k1*f1-2*k2*delta*f2-k3*delta*delta*f3) );
+    }
+}
+
 function A(k, ji, jf, L1, L2, delta){
     var f1 = F(k,ji,L1,L1,jf),
         f2 = F(k,ji,L1,L2,jf),
@@ -547,7 +639,7 @@ function A(k, ji, jf, L1, L2, delta){
 
     tabulateA(k, f1,f2,f3);
 
-    return (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3);
+    return (1/(1+Math.pow(delta,2)))*(f1-2*delta*f2+delta*delta*f3);
 };
 
 function tabulateA(k, f1, f2, f3){
@@ -567,24 +659,24 @@ function tabulateA(k, f1, f2, f3){
     for(i=0; i<dataStore.steps; i++){
         delta = min + (max-min)*i/dataStore.steps;
         if(k==2)
-            dataStore.A2.push( (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3) );
+            dataStore.A2.push( (1/(1+Math.pow(delta,2)))*(f1-2*delta*f2+delta*delta*f3) );
         else if(k==4)
-            dataStore.A4.push( (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3) );
+            dataStore.A4.push( (1/(1+Math.pow(delta,2)))*(f1-2*delta*f2+delta*delta*f3) );
         else if(k==6)
-            dataStore.A6.push( (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3) );
+            dataStore.A6.push( (1/(1+Math.pow(delta,2)))*(f1-2*delta*f2+delta*delta*f3) );
         else if(k==8)
-            dataStore.A8.push( (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3) );
+            dataStore.A8.push( (1/(1+Math.pow(delta,2)))*(f1-2*delta*f2+delta*delta*f3) );
     }
 }
 
 function B(k, ji, jf, L1, L2, delta){
     var f1 = F(k,jf,L1,L1,ji),
         f2 = F(k,jf,L1,L2,ji),
-        f3 = F(k,jf,L2,L2,ji)
+        f3 = F(k,jf,L2,L2,ji);
 
     tabulateB(k, f1,f2,f3,L1,L2);
 
-    return (1/(1+Math.pow(delta,2)))*(f1+(Math.pow((-1),((L1+L2))))*2*delta*f2+delta*delta*f3);
+    return (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3);
 };
 
 function tabulateB(k, f1, f2, f3, L1, L2){
@@ -604,13 +696,13 @@ function tabulateB(k, f1, f2, f3, L1, L2){
     for(i=0; i<dataStore.steps; i++){
         delta = min + (max-min)*i/dataStore.steps;
         if(k==2)
-            dataStore.B2.push( (1/(1+Math.pow(delta,2)))*(f1+(Math.pow((-1),((L1+L2))))*2*delta*f2+delta*delta*f3) );
+            dataStore.B2.push( (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3) );
         else if (k==4)
-            dataStore.B4.push( (1/(1+Math.pow(delta,2)))*(f1+(Math.pow((-1),((L1+L2))))*2*delta*f2+delta*delta*f3) );
+            dataStore.B4.push( (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3) );
         else if (k==6)
-            dataStore.B6.push( (1/(1+Math.pow(delta,2)))*(f1+(Math.pow((-1),((L1+L2))))*2*delta*f2+delta*delta*f3) );
+            dataStore.B6.push( (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3) );
         else if (k==8)
-            dataStore.B8.push( (1/(1+Math.pow(delta,2)))*(f1+(Math.pow((-1),((L1+L2))))*2*delta*f2+delta*delta*f3) );
+            dataStore.B8.push( (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3) );
     }
 }
 
