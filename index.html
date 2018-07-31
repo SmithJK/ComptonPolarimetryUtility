@@ -112,16 +112,16 @@
                     </div>
                     <div>
                         <label for="P90" class="right inline"><b>P(90)</b></label>
-                        <input class='a2a4' type="number" id="P90" step="0.001" title='' onchange="plot();document.getElementById('customQPwarning').classList.remove('hidden');">
+                        <input class='a2a4' type="number" id="P90" step="0.001" title='' onchange="plot();document.getElementById('customPwarning').classList.remove('hidden');">
                     </div>
                     <hr></hr>
 
-                    <div id='customQPwarning' class='warning hidden'>
+                    <div id='customPwarning' class='warning hidden'>
                         Warning: Custom values of P set, does not correspond to selected mixing ratios or momenta.
                     </div>
-<!--
+
                     <div>
-                        <h3>a2/a4 Plot Options</h3>
+                        <h3>Plot Options</h3>
                         <label for='minMix' class='right inline'>Min. mixing: </label>
                         <input type='number' id='minMix', step='0.1' value='-10' onchange='updateMixLimits()'></input>
                     </div>
@@ -133,28 +133,19 @@
                         <label for='mixSamples' class='right inline'>Mixing Samples: </label>
                         <input type='number' id='mixingSamples', step='1' value='200' onchange='updateMixingSamples()'></input>
                     </div>
--->
+
                 </form>
 
                 <p id="error1"></p>
             </div>
         </div>
-<!--
+
         <div class='sectionWrapper'>
-            <div id='a2Wrap' class='col-md-6'>
-                <div id='a2Plot'></div>
-            </div>
-            <div id='a4Wrap' class='col-md-6'>
-                <div id='a4Plot'></div>
+            <div id='P90Wrap' class='col-md-6'>
+                <div id='P90Plot'></div>
             </div>
         </div>
 
-        <div class='sectionWrapper'>
-            <div id='a_parametric_Wrap' class='col-md-6'>
-                <div id='aParametricPlot'></div>
-            </div>
-        </div>
--->
         <div class='sectionWrapper content references'>
             <div class='col-md-3'>
                 <img src='images/levelScheme.png'></img>
@@ -195,18 +186,18 @@
                 cache: {
                     factorial: [],
                 },
-                //steps: parseInt(document.getElementById('mixingSamples').value,10), //number of bins in mixing ratio for a2 and a4 plots
-                //minMix: parseInt(document.getElementById('minMix').value,10),
-                //maxMix: parseInt(document.getElementById('maxMix').value,10)
+                steps: parseInt(document.getElementById('mixingSamples').value,10), //number of bins in mixing ratio for a2 and a4 plots
+                minMix: parseInt(document.getElementById('minMix').value,10),
+                maxMix: parseInt(document.getElementById('maxMix').value,10)
             };
 
             //set up x and y values for a2 and a4 plots
-            //dataStore.x = [];
-            //dataStore.y = [];
-            //for(i=0; i<dataStore.steps; i++){
-            //    dataStore.x.push(-1 + 2*i/dataStore.steps);
-            //    dataStore.y.push(-1 + 2*i/dataStore.steps);
-            //}
+            dataStore.x = [];
+            dataStore.y = [];
+            for(i=0; i<dataStore.steps; i++){
+                dataStore.x.push(-1 + 2*i/dataStore.steps);
+                dataStore.y.push(-1 + 2*i/dataStore.steps);
+            }
 
             //set up spin option dropdowns
             evenA();

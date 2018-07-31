@@ -50,16 +50,15 @@ function plot(setup){
         dataStore.plot.updateOptions( { 'file': data });
     }
 };
-/*
-function plot2D(n){
-    //regenerate the plot for a2 (n=2) or a4 (n=4)
+
+function plot2D(){
     var data = [
             {
                 x: dataStore.x,
                 y: dataStore.y,
-                z: (n==2) ? dataStore.a2 : dataStore.a4,
+                z: dataStore.P90,
                 type: 'contour',
-                name: (n==2) ? 'a2': 'a4', 
+                name: 'P(90)', 
                 hoverinfo:"x+y+z",
                 colorscale: 'Viridis',
                 zaxis: {
@@ -67,9 +66,9 @@ function plot2D(n){
                 }
             }
         ],
-        dim = document.getElementById('a'+n+'Wrap').offsetWidth,
+        dim = document.getElementById('P90Wrap').offsetWidth,
         layout = {
-            title: (n==2) ? 'a2' : 'a4',
+            title: 'P(90)',
             xaxis:{
                 title: 'L<sub>1a</sub> / L<sub>1b</sub> mixing'
             },
@@ -82,15 +81,15 @@ function plot2D(n){
         }
 
 
-    Plotly.newPlot('a'+n+'Plot', data, layout);
+    Plotly.newPlot('P90Plot', data, layout);
 }
 
-function plot_a(n, missingL1, missingL2){
-    //regenerate the 1D plot for at (n==2) or a4 (n==4)
+function plot_P90(missingL1, missingL2){
+    //regenerate the 1D plot
     //leave the appropriate mixing ratio unconstrained depending on who's not missing (should never be both missing)
 
     var data,
-        dim = document.getElementById('a'+n+'Wrap').offsetWidth,
+        dim = document.getElementById('P90Wrap').offsetWidth,
         layout = {
             autosize: false,
             width: dim,
@@ -99,7 +98,7 @@ function plot_a(n, missingL1, missingL2){
                 title: missingL1 ? 'L<sub>2a</sub> / L<sub>2b</sub> mixing' : 'L<sub>1a</sub> / L<sub>1b</sub> mixing'
             },
             yaxis:{
-                title: (n==2) ? 'a2' : 'a4'
+                title: 'P(90)'
             },
         }, i,
         zero = 1/(2/dataStore.steps)
@@ -108,59 +107,26 @@ function plot_a(n, missingL1, missingL2){
     if(missingL1){
         data = [];
         for(i=0; i<dataStore.steps; i++){
-            data.push( (n==2) ? dataStore.a2[i][zero] : dataStore.a4[i][zero] );
+            data.push( dataStore.P90[i][zero] );
         }
     } else if(missingL2){
-        data = (n==2) ? dataStore.a2[zero] : dataStore.a4[zero];
+        data = dataStore.P90[zero] ;
     }
-
-    //keep data around for the parametric plot
-    if(n==2)
-        dataStore.a2parametric = JSON.parse(JSON.stringify(data));
-    else if (n==4)
-        dataStore.a4parametric = JSON.parse(JSON.stringify(data));
 
     //construct the plotly data object
     data = [
         {
             x: dataStore.x,
             y: data,
-            name: (n==2) ? 'a2': 'a4',
+            name: 'P(90)',
             mode: 'markers',
             type: 'scatter'
         }
     ]
     
-    Plotly.newPlot('a'+n+'Plot', data, layout);    
+    Plotly.newPlot('P90Plot', data, layout);    
 }
 
-function plot_parametric_a(){
-    var dim = document.getElementById('a_parametric_Wrap').offsetWidth,
-        layout = {
-            autosize: false,
-            width: dim,
-            height: dim,
-            xaxis:{
-                title: 'a2'
-            },
-            yaxis:{
-                title: 'a4'
-            },
-            hovermode:'closest'
-        },
-        data = [
-            {
-                x: dataStore.a2parametric,
-                y: dataStore.a4parametric,
-                text: dataStore.mixingRatioLabels,
-                mode: 'markers',
-                type: 'scatter',
-            }
-        ]
-
-        Plotly.newPlot('aParametricPlot', data, layout); 
-}
-*/
 /////////////////////////////////
 //recalculation functions
 //////////////////////////////////
@@ -252,8 +218,8 @@ function recalculate(){
         i, j, row,
         noL1mix = false, 
         noL2mix = false;
-        //min = dataStore.minMix,
-        //max = dataStore.maxMix;
+        min = dataStore.minMix,
+        max = dataStore.maxMix;
 
     if (l1a==l1b){
         noL1mix = true;
@@ -280,11 +246,6 @@ function recalculate(){
 		$('#delta2-slider').removeAttr('disabled');
     }
 
-/*    document.getElementById("a2").value = calculate_a2(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
-    document.getElementById("a4").value = calculate_a4(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
-    document.getElementById("a6").value = calculate_a6(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
-    document.getElementById("a8").value = calculate_a8(j1,j2,j3,l1a,l1b,l2a,l2b,d1,d2);
-*/
     if (direction==1.0) {
        document.getElementById("P90").value = calculate_P90(j1,p1,j2,p2,j3,p3,l1a,l1b,l2a,l2b,d1,d2);
     }
@@ -294,11 +255,11 @@ function recalculate(){
 
     plot();
 
-//    document.getElementById('customAwarning').classList.add('hidden');
+    document.getElementById('customPwarning').classList.add('hidden');
 
-    //a2 and a4 plots
+    //P90 plots
     //generate data
-/*
+
     dataStore.x = [];
     dataStore.y = [];
     dataStore.mixingRatioLabels = [];
@@ -308,36 +269,22 @@ function recalculate(){
         dataStore.mixingRatioLabels.push('Mixing: ' + dataStore.x[i].toFixed(6));
     }
 
-    dataStore.a2 = [];
-    dataStore.a4 = [];
-    dataStore.a6 = [];
-    dataStore.a8 = [];
+    dataStore.P90 = [];
     for(i=0; i<dataStore.steps; i++){
-        dataStore.a2[i] = []
-        dataStore.a4[i] = []
-        dataStore.a6[i] = []
-        dataStore.a8[i] = []
+        dataStore.P90[i] = []
         for(j=0; j<dataStore.steps; j++){
-            dataStore.a2[i][j] = dataStore.A2[i]*dataStore.B2[j];
-            dataStore.a4[i][j] = dataStore.A4[i]*dataStore.B4[j];
-            dataStore.a6[i][j] = dataStore.A6[i]*dataStore.B6[j];
-            dataStore.a8[i][j] = dataStore.A8[i]*dataStore.B8[j];
+            dataStore.P90[i][j] = 1;
         }
     }
-*/
-//    if (noL1mix && noL2mix){
-//        document.getElementById('a2Plot').innerHTML = '';
-//        document.getElementById('a4Plot').innerHTML = '';
-//    }
-//    else if(noL1mix || noL2mix){
-//        plot_a(2, noL1mix, noL2mix);
-//        plot_a(4, noL1mix, noL2mix);
-//        plot_parametric_a();
-//    } else {
-//        plot2D(2);
-//        plot2D(4);
-//        document.getElementById('aParametricPlot').innerHTML = '';
-//    }
+
+    if (noL1mix && noL2mix){
+        document.getElementById('P90Plot').innerHTML = '';
+    }
+    else if(noL1mix || noL2mix){
+        plot_P90(noL1mix, noL2mix);
+    } else {
+        plot2D();
+    }
 };
 
 //////////////////
@@ -367,22 +314,6 @@ function calculate_P90(j1, p1, j2, p2, j3, p3, l1a, l1b, l2a, l2b, delta1, delta
 
    return factor*topterm/bottomterm;
 }
-
-function calculate_a2(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
-    return B(2,j2,j1,l1a,l1b,delta1)*A(2,j3,j2,l2a,l2b,delta2);
-};
-
-function calculate_a4(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
-    return B(4,j2,j1,l1a,l1b,delta1)*A(4,j3,j2,l2a,l2b,delta2);
-};
-
-function calculate_a6(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
-    return B(6,j2,j1,l1a,l1b,delta1)*A(6,j3,j2,l2a,l2b,delta2);
-};
-
-function calculate_a8(j1, j2, j3, l1a, l1b, l2a, l2b, delta1, delta2){
-    return B(8,j2,j1,l1a,l1b,delta1)*A(8,j3,j2,l2a,l2b,delta2);
-};
 
 function legendre(k,x){
    var value = 0;
@@ -622,7 +553,7 @@ function Aprime(k, ji, jf, L1, L2, delta){
 
     return (1/(1+Math.pow(delta,2)))*(k1*f1-2*k2*delta*f2-k3*delta*delta*f3);
 };
-/*
+
 function tabulateAprime(k, k1, k2, k3, f1, f2, f3){
     //given precomputed values of F, reconstruct the table of A values for the currently selected momenta, across a range of mixing ratios.
     var i, delta,
@@ -649,17 +580,17 @@ function tabulateAprime(k, k1, k2, k3, f1, f2, f3){
             dataStore.Ap8.push( (1/(1+Math.pow(delta,2)))*(k1*f1-2*k2*delta*f2-k3*delta*delta*f3) );
     }
 }
-*/
+
 function A(k, ji, jf, L1, L2, delta){
     var f1 = F(k,ji,L1,L1,jf),
         f2 = F(k,ji,L1,L2,jf),
         f3 = F(k,ji,L2,L2,jf);
 
-    //tabulateA(k, f1,f2,f3);
+    tabulateA(k, f1,f2,f3);
 
     return (1/(1+Math.pow(delta,2)))*(f1-2*delta*f2+delta*delta*f3);
 };
-/*
+
 function tabulateA(k, f1, f2, f3){
     //given precomputed values of F, reconstruct the table of A values for the currently selected momenta, across a range of mixing ratios.
     var i, delta,
@@ -686,17 +617,17 @@ function tabulateA(k, f1, f2, f3){
             dataStore.A8.push( (1/(1+Math.pow(delta,2)))*(f1-2*delta*f2+delta*delta*f3) );
     }
 }
-*/
+
 function B(k, ji, jf, L1, L2, delta){
     var f1 = F(k,jf,L1,L1,ji),
         f2 = F(k,jf,L1,L2,ji),
         f3 = F(k,jf,L2,L2,ji);
 
-    //tabulateB(k, f1,f2,f3,L1,L2);
+    tabulateB(k, f1,f2,f3,L1,L2);
 
     return (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3);
 };
-/*
+
 function tabulateB(k, f1, f2, f3, L1, L2){
     //given precomputed values of F, reconstruct the table of B values for the currently selected momenta, across a range of mixing ratios.
     var i, delta,
@@ -723,7 +654,7 @@ function tabulateB(k, f1, f2, f3, L1, L2){
             dataStore.B8.push( (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3) );
     }
 }
-*/
+
 function evenA(){
     
     var select, option, i, spin;
@@ -797,7 +728,6 @@ function syncElements(source, dest){
     document.getElementById(dest).value = val;
 }
 
-/*
 function updateMixingSamples(){
     dataStore.steps = parseInt(document.getElementById('mixingSamples').value,10);
     recalculate();
@@ -809,4 +739,4 @@ function updateMixLimits(){
     recalculate();
 
 }
-*/
+
