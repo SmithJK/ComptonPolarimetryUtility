@@ -273,7 +273,19 @@ function recalculate(){
     for(i=0; i<dataStore.steps; i++){
         dataStore.P90[i] = []
         for(j=0; j<dataStore.steps; j++){
-            dataStore.P90[i][j] = 1;
+            // this is just a fancy way of making sure that an electric transition for level 2-->3 gives us the + factor and a magnetic transition gives us the - factor.
+            var factor, topterm, bottomterm;
+            if (direction==1.0) {
+               factor = (-2*(l2a%2)+1)*p2*p3;
+               topterm = dataStore.A2[i]*dataStore.Ap2[j]*assoclegendre2(2,0) + dataStore.A4[i]*dataStore.Ap4[j]*assoclegendre2(4,0) + dataStore.A6[i]*dataStore.Ap6[j]*assoclegendre2(6,0) + dataStore.A8[i]*dataStore.Ap8[j]*assoclegendre2(8,0);
+               bottomterm = 1 + dataStore.A2[i]*dataStore.B2[j]*legendre(2,0) + dataStore.A4[i]*dataStore.B4[j]*legendre(4,0) + dataStore.A6[i]*dataStore.B6[j]*legendre(6,0) + dataStore.A8[i]*dataStore.B8[j]*legendre(8,0);
+            }
+            else if (direction==-1.0) {
+               factor = (-2*(l1a%2)+1)*p2*p1;
+               topterm = dataStore.A2[j]*dataStore.Ap2[i]*assoclegendre2(2,0) + dataStore.A4[j]*dataStore.Ap4[i]*assoclegendre2(4,0) + dataStore.A6[j]*dataStore.Ap6[i]*assoclegendre2(6,0) + dataStore.A8[j]*dataStore.Ap8[i]*assoclegendre2(8,0);
+               bottomterm = 1 + dataStore.A2[j]*dataStore.B2[i]*legendre(2,0) + dataStore.A4[j]*dataStore.B4[i]*legendre(4,0) + dataStore.A6[j]*dataStore.B6[i]*legendre(6,0) + dataStore.A8[j]*dataStore.B8[i]*legendre(8,0);
+            }
+            dataStore.P90[i][j] = factor*topterm/bottomterm;
         }
     }
 
@@ -294,19 +306,14 @@ function recalculate(){
 function calculate_P90(j1, p1, j2, p2, j3, p3, l1a, l1b, l2a, l2b, delta1, delta2){
    var topterm = 0;
    var i = 2;
-   var firstterm = A(i,j1,j2,l1a,l1b,delta1)*Aprime(i,j2,j3,l2a,l2b,delta2)*assoclegendre2(i,0); // here, the second argument in assoclegendre2 is zero for theta=90
-   while (firstterm!=0) {
-      topterm = topterm + firstterm;
-      i = i + 2;
+   for (i=2;i<9;i=i+2) {
       firstterm = A(i,j1,j2,l1a,l1b,delta1)*Aprime(i,j2,j3,l2a,l2b,delta2)*assoclegendre2(i,0);
+      topterm = topterm + firstterm;
    }
    var bottomterm = 1;
-   i=2;
-   firstterm = A(i,j1,j2,l1a,l1b,delta1)*B(i,j2,j3,l2a,l2b,delta2)*legendre(i,0);
-   while (firstterm!=0) {
-      bottomterm = bottomterm + firstterm;
-      i = i + 2;
+   for (i=2;i<9;i=i+2) {
       firstterm = A(i,j1,j2,l1a,l1b,delta1)*B(i,j2,j3,l2a,l2b,delta2)*legendre(i,0);
+      bottomterm = bottomterm + firstterm;
    }
 
    // this is just a fancy way of making sure that an electric transition for level 2-->3 gives us the + factor and a magnetic transition gives us the - factor.
@@ -549,7 +556,7 @@ function Aprime(k, ji, jf, L1, L2, delta){
         f2 = F(k,jf,L1,L2,ji),
         f3 = F(k,jf,L2,L2,ji);
 
-//    tabulateAprime(k,f1,f2,f3);
+    tabulateAprime(k,k1,k2,k3,f1,f2,f3);
 
     return (1/(1+Math.pow(delta,2)))*(k1*f1-2*k2*delta*f2-k3*delta*delta*f3);
 };
