@@ -596,8 +596,9 @@ function A(k, ji, jf, L1, L2, delta){
         f3 = F(k,ji,L2,L2,jf);
 
     tabulateA(k, f1,f2,f3);
-
-    return (1/(1+Math.pow(delta,2)))*(f1-2*delta*f2+delta*delta*f3);
+    // the line below is inconsistent with the same function in the Angular Correlation Utility, so I'm aligning it with that. - JKS, 2 July 2018
+    //return (1/(1+Math.pow(delta,2)))*(f1-2*delta*f2+delta*delta*f3);
+    return (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3);
 };
 
 function tabulateA(k, f1, f2, f3){
