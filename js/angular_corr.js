@@ -315,7 +315,6 @@ function calculate_P90(j1, p1, j2, p2, j3, p3, l1a, l1b, l2a, l2b, delta1, delta
       firstterm = B(i,j2,j3,l2a,l2b,delta2);
       //firstterm = A(i,j1,j2,l1a,l1b,delta1)*B(i,j2,j3,l2a,l2b,delta2)*legendre(i,0);
       bottomterm = bottomterm + firstterm;
-      if (i==2) break;
    }
 
    // this is just a fancy way of making sure that an electric transition for level 2-->3 gives us the + factor and a magnetic transition gives us the - factor.
