@@ -634,8 +634,8 @@ function B(k, ji, jf, L1, L2, delta){
         f3 = F(k,jf,L2,L2,ji);
 
     tabulateB(k, f1,f2,f3,L1,L2);
-
-    return (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3);
+    return f1;
+  //  return (1/(1+Math.pow(delta,2)))*(f1+2*delta*f2+delta*delta*f3);
 };
 
 function tabulateB(k, f1, f2, f3, L1, L2){
