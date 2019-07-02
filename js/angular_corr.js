@@ -319,7 +319,8 @@ function calculate_P90(j1, p1, j2, p2, j3, p3, l1a, l1b, l2a, l2b, delta1, delta
    // this is just a fancy way of making sure that an electric transition for level 2-->3 gives us the + factor and a magnetic transition gives us the - factor.
    var factor = (-2*(l2a%2)+1)*p2*p3;
 
-   return factor*topterm/bottomterm;
+   return topterm;
+//   return factor*topterm/bottomterm;
 }
 
 function legendre(k,x){
