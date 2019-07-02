@@ -312,8 +312,7 @@ function calculate_P90(j1, p1, j2, p2, j3, p3, l1a, l1b, l2a, l2b, delta1, delta
    }
    var bottomterm = 1;
    for (i=2;i<9;i=i+2) {
-      firstterm = A(i,j1,j2,l1a,l1b,delta1);
-      //firstterm = A(i,j1,j2,l1a,l1b,delta1)*B(i,j2,j3,l2a,l2b,delta2)*legendre(i,0);
+      firstterm = A(i,j1,j2,l1a,l1b,delta1)*B(i,j2,j3,l2a,l2b,delta2)*legendre(i,0);
       bottomterm = bottomterm + firstterm;
    }
 
