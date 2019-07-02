@@ -275,13 +275,13 @@ function recalculate(){
         for(j=0; j<dataStore.steps; j++){
             // this is just a fancy way of making sure that an electric transition for level 2-->3 gives us the + factor and a magnetic transition gives us the - factor.
             var factor, topterm, bottomterm;
-            if (direction==1.0) {
-               factor = (-2*(l2a%2)+1)*p2*p3;
+            if (direction==-1.0) {
+               factor = (-2*(l1a%2)+1)*p2*p3;
                topterm = dataStore.A2[i]*dataStore.Ap2[j]*assoclegendre2(2,0) + dataStore.A4[i]*dataStore.Ap4[j]*assoclegendre2(4,0) + dataStore.A6[i]*dataStore.Ap6[j]*assoclegendre2(6,0) + dataStore.A8[i]*dataStore.Ap8[j]*assoclegendre2(8,0);
                bottomterm = 1 + dataStore.A2[i]*dataStore.B2[j]*legendre(2,0) + dataStore.A4[i]*dataStore.B4[j]*legendre(4,0) + dataStore.A6[i]*dataStore.B6[j]*legendre(6,0) + dataStore.A8[i]*dataStore.B8[j]*legendre(8,0);
             }
-            else if (direction==-1.0) {
-               factor = (-2*(l1a%2)+1)*p2*p1;
+            else if (direction==1.0) {
+               factor = (-2*(l2a%2)+1)*p2*p1;
                topterm = dataStore.A2[j]*dataStore.Ap2[i]*assoclegendre2(2,0) + dataStore.A4[j]*dataStore.Ap4[i]*assoclegendre2(4,0) + dataStore.A6[j]*dataStore.Ap6[i]*assoclegendre2(6,0) + dataStore.A8[j]*dataStore.Ap8[i]*assoclegendre2(8,0);
                bottomterm = 1 + dataStore.A2[j]*dataStore.B2[i]*legendre(2,0) + dataStore.A4[j]*dataStore.B4[i]*legendre(4,0) + dataStore.A6[j]*dataStore.B6[i]*legendre(6,0) + dataStore.A8[j]*dataStore.B8[i]*legendre(8,0);
             }
